@@ -25,7 +25,7 @@ contract FlightSuretyData {
     }
 
     mapping(address => bool) private authorizedCallers;
-    mapping(address => Airline) public airlines;
+    mapping(address => Airline) private airlines;
     mapping(bytes32 => Flight) private flights;
 
     /********************************************************************************************/
@@ -114,11 +114,11 @@ contract FlightSuretyData {
      *
      */
 
-    function registerAirline(address _address) external {
-        require(
-            !airlines[_address].isRegistered,
-            "Airline is already registered."
-        );
+    function registerAirline(address _address) external requireIsOperational {
+        // require(
+        //     !airlines[_address].isRegistered,
+        //     "Airline is already registered."
+        // );
         airlines[_address] = Airline({isRegistered: true});
     }
 

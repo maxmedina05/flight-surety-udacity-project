@@ -91,11 +91,12 @@ contract('Flight Surety Tests', async (accounts) => {
 //   });
 
   it('should register first airline when contract is deployed', async () => {
-    const airlines = await config.flightSuretyData.airlines.call(config.firstAirline);
+    // const airlines = await config.flightSuretyData.airlines.call(config.firstAirline);
     
-    console.log(airlines)
-    
-    const isAirlineRegistered = await config.flightSuretyData.isAirline.call(config.firstAirline); 
+    // console.log(airlines)
+    const isAirlineRegistered = await config.flightSuretyData.isAirline.call('0xf17f52151EbEF6C7334FAD080c5704D77216b732'); 
+    // const isAirlineRegistered = await config.flightSuretyData.isAirline.call(config.firstAirline); 
+
     assert.equal(isAirlineRegistered, true, "First Airline is not registered");
   })
 });
