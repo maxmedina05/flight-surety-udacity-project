@@ -37,6 +37,8 @@ contract FlightSuretyData {
     mapping(address => Airline) private airlines;
     mapping(bytes32 => Flight) private flights;
     mapping(address => address[]) registrationVotes;
+    mapping(address => uint256) internal funds;
+    mapping(address => uint256) internal balances;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -150,7 +152,7 @@ contract FlightSuretyData {
                     isRegistered: true,
                     isParticipant: false
                 });
-                airlineCounter++;
+                // airlineCounter++;
             } else {
                 bool isDuplicate = false;
                 for (uint256 c = 0; c < multiCalls.length; c++) {
@@ -172,7 +174,7 @@ contract FlightSuretyData {
                         isParticipant: false
                     });
                     multiCalls = new address[](0);
-                    airlineCounter++;
+                    // airlineCounter++;
                 }
             }
         }
@@ -188,7 +190,18 @@ contract FlightSuretyData {
         airlineCounter--;
     }
 
-    function fund() public payable requireIsOperational {}
+    function fund() public payable requireIsOperational {
+        require(airlines[msg.sender].isRegistered, "Airline is not registered");
+        require(
+            !airlines[msg.sender].isParticipant,
+            "Airline already paid participation fee"
+        );
+        require(msg.value > PARTICIPATION_FEE, "Insufficient balance");
+
+        airlines[msg.sender].isParticipant = true;
+        funds[msg.sender] = msg.value;
+        airlineCounter++;
+    }
 
     function getFlightKey(
         address airline,
