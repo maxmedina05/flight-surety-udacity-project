@@ -38,6 +38,7 @@ contract FlightSuretyData {
      */
     constructor() public {
         contractOwner = msg.sender;
+        // airlines[msg.sender] = Airline({isRegistered: true});
     }
 
     /********************************************************************************************/
@@ -114,7 +115,7 @@ contract FlightSuretyData {
      *
      */
 
-    function registerAirline(address _address) external requireIsOperational {
+    function registerAirline(address _address) external {
         // require(
         //     !airlines[_address].isRegistered,
         //     "Airline is already registered."
