@@ -120,7 +120,7 @@ contract('Flight Surety Tests', async (accounts) => {
     // ACT
     try {
       await config.flightSuretyApp.registerAirline(newAirline, {
-        from: accounts[0],
+        from: config.firstAirline,
       })
     } catch (e) {}
     let result = await config.flightSuretyData.isAirline.call(newAirline)
