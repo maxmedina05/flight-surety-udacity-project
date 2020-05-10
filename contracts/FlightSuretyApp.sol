@@ -84,6 +84,10 @@ contract FlightSuretyApp {
         flightSuretyData.registerAirline(_address);
     }
 
+    function isAirline(address _address) external view returns (bool) {
+        flightSuretyData.isAirline(_address);
+    }
+
     /**
      * @dev Register a future flight for insuring.
      *
@@ -315,6 +319,8 @@ contract FlightSuretyApp {
 
 contract FlightSuretyData {
     function registerAirline(address _address) external;
+
+    function isAirline(address _address) external view returns (bool);
 
     function isOperational() public view returns (bool);
 }

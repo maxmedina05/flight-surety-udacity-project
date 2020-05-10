@@ -7,6 +7,12 @@ contract FlightSuretyData {
     using SafeMath for uint256;
 
     /********************************************************************************************/
+    /*                                       DATA CONSTANTS                                     */
+    /********************************************************************************************/
+
+    uint256 public constant PARTICIPATION_FEE = 1 ether;
+
+    /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
@@ -24,11 +30,13 @@ contract FlightSuretyData {
 
     struct Airline {
         bool isRegistered;
+        bool isParticipant;
     }
 
     mapping(address => bool) private authorizedCallers;
     mapping(address => Airline) private airlines;
     mapping(bytes32 => Flight) private flights;
+    mapping(address => address[]) registrationVotes;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -115,7 +123,6 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-
     function registerAirline(address _address) external {
         require(
             !airlines[_address].isRegistered,
@@ -123,18 +130,28 @@ contract FlightSuretyData {
         );
 
         if (airlineCounter == 0) {
-            airlines[_address] = Airline({isRegistered: true});
+            airlines[_address] = Airline({
+                isRegistered: true,
+                isParticipant: true
+            });
             airlineCounter++;
         } else {
             require(
                 airlines[msg.sender].isRegistered,
                 "Only existing airline may register new airlines"
             );
+            require(
+                airlines[msg.sender].isParticipant,
+                "Airline has not paid participation fee"
+            );
 
-            if (airlineCounter < 5) {
-                airlines[_address] = Airline({isRegistered: true});
+            if (airlineCounter < 4) {
+                airlines[_address] = Airline({
+                    isRegistered: true,
+                    isParticipant: false
+                });
                 airlineCounter++;
-            } else if (airlineCounter >= 5) {
+            } else {
                 bool isDuplicate = false;
                 for (uint256 c = 0; c < multiCalls.length; c++) {
                     if (multiCalls[c] == msg.sender) {
@@ -150,7 +167,10 @@ contract FlightSuretyData {
                 multiCalls.push(msg.sender);
                 uint256 M = airlineCounter / 2;
                 if (multiCalls.length >= M) {
-                    airlines[_address] = Airline({isRegistered: true});
+                    airlines[_address] = Airline({
+                        isRegistered: true,
+                        isParticipant: false
+                    });
                     multiCalls = new address[](0);
                     airlineCounter++;
                 }
@@ -158,12 +178,17 @@ contract FlightSuretyData {
         }
     }
 
-    function unregisterAirline(address _address) external requireContractOwner {
+    function unregisterAirline(address _address)
+        external
+        requireContractOwner
+        requireIsOperational
+    {
         airlines[_address].isRegistered = false;
+        airlines[_address].isParticipant = false;
         airlineCounter--;
     }
 
-    function fund() public payable {}
+    function fund() public payable requireIsOperational {}
 
     function getFlightKey(
         address airline,
