@@ -10,7 +10,7 @@ contract FlightSuretyData {
     /*                                       DATA CONSTANTS                                     */
     /********************************************************************************************/
 
-    uint256 public constant PARTICIPATION_FEE = 1 ether;
+    uint256 public constant PARTICIPATION_FEE = 10 ether;
 
     /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
