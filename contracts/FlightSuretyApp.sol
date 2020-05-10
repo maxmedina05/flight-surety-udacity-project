@@ -72,32 +72,22 @@ contract FlightSuretyApp {
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
 
-    function isOperational() public pure returns (bool) {
-        return true; // Modify to call data contract's status
+    function isOperational() public view returns (bool) {
+        return flightSuretyData.isOperational();
     }
 
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
-    /**
-     * @dev Add an airline to the registration queue
-     *
-     */
-
-    // function registerAirline()
-    //     external
-    //     pure
-    //     returns (bool success, uint256 votes)
-    // {
-    //     return (success, 0);
-    // }
+    function registerAirline(address _address) external {
+        flightSuretyData.registerAirline(_address);
+    }
 
     /**
      * @dev Register a future flight for insuring.
      *
      */
-
     function registerFlight() external pure {}
 
     /**
@@ -325,4 +315,6 @@ contract FlightSuretyApp {
 
 contract FlightSuretyData {
     function registerAirline(address _address) external;
+
+    function isOperational() public view returns (bool);
 }

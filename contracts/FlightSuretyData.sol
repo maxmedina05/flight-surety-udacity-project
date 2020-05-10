@@ -12,6 +12,8 @@ contract FlightSuretyData {
 
     address private contractOwner; // Account used to deploy contract
     bool private operational = true; // Blocks all state changes throughout the contract if false
+    uint256 public airlineCounter = 0;
+    address[] multiCalls = new address[](0);
 
     struct Flight {
         bool isRegistered;
@@ -38,7 +40,6 @@ contract FlightSuretyData {
      */
     constructor() public {
         contractOwner = msg.sender;
-        // airlines[msg.sender] = Airline({isRegistered: true});
     }
 
     /********************************************************************************************/
@@ -116,11 +117,45 @@ contract FlightSuretyData {
      */
 
     function registerAirline(address _address) external {
-        // require(
-        //     !airlines[_address].isRegistered,
-        //     "Airline is already registered."
-        // );
-        airlines[_address] = Airline({isRegistered: true});
+        require(
+            !airlines[_address].isRegistered,
+            "Airline is already registered."
+        );
+
+        if (airlineCounter == 0) {
+            airlines[_address] = Airline({isRegistered: true});
+            airlineCounter++;
+        } else {
+            require(
+                airlines[msg.sender].isRegistered,
+                "Only existing airline may register new airlines"
+            );
+
+            if (airlineCounter < 5) {
+                airlines[_address] = Airline({isRegistered: true});
+                airlineCounter++;
+            } else if (airlineCounter >= 5) {
+                bool isDuplicate = false;
+                for (uint256 c = 0; c < multiCalls.length; c++) {
+                    if (multiCalls[c] == msg.sender) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+                require(
+                    !isDuplicate,
+                    "Caller has already called this function."
+                );
+
+                multiCalls.push(msg.sender);
+                uint256 M = airlineCounter / 2;
+                if (multiCalls.length >= M) {
+                    airlines[_address] = Airline({isRegistered: true});
+                    multiCalls = new address[](0);
+                     airlineCounter++;
+                }
+            }
+        }
     }
 
     function fund() public payable {}

@@ -69,24 +69,24 @@ contract('Flight Surety Tests', async (accounts) => {
 
   //   });
 
-  //   it('(airline) cannot register an Airline using registerAirline() if it is not funded', async () => {
+  // it('(airline) cannot register an Airline using registerAirline() if it is not funded', async () => {
 
-  //     // ARRANGE
-  //     let newAirline = accounts[2];
+  //   // ARRANGE
+  //   let newAirline = accounts[2];
 
-  //     // ACT
-  //     try {
-  //         await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
-  //     }
-  //     catch(e) {
+  //   // ACT
+  //   try {
+  //       await config.flightSuretyApp.registerAirline(newAirline, {from: config.firstAirline});
+  //   }
+  //   catch(e) {
 
-  //     }
-  //     let result = await config.flightSuretyData.isAirline.call(newAirline);
+  //   }
+  //   let result = await config.flightSuretyData.isAirline.call(newAirline);
 
-  //     // ASSERT
-  //     assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
+  //   // ASSERT
+  //   assert.equal(result, false, "Airline should not be able to register another airline if it hasn't provided funding");
 
-  //   });
+  // });
 
   it('should register first airline when contract is deployed', async () => {
     const isAirlineRegistered = await config.flightSuretyData.isAirline.call(
@@ -94,4 +94,68 @@ contract('Flight Surety Tests', async (accounts) => {
     )
     assert.equal(isAirlineRegistered, true, 'First Airline is not registered')
   })
+
+  it('should fail if a non registered airline tries to register a new airline', async () => {
+    // ARRANGE
+    let newAirline = accounts[2]
+    let reverted = false
+
+    // ACT
+    try {
+      await config.flightSuretyApp.registerAirline(newAirline, {
+        from: newAirline,
+      })
+    } catch (e) {
+      reverted = true
+    }
+
+    // ASSERT
+    assert.equal(reverted, true)
+  })
+
+  it('should only allow existing airlines to register new arline', async () => {
+    // ARRANGE
+    let newAirline = accounts[2]
+
+    // ACT
+    try {
+      await config.flightSuretyApp.registerAirline(newAirline, {
+        from: accounts[0],
+      })
+    } catch (e) {}
+    let result = await config.flightSuretyData.isAirline.call(newAirline)
+
+    // ASSERT
+    assert.equal(result, true)
+  })
+
+  // it('should only register fifth or subsequent airlines with consensus of 50% of registered airlines', async () => {
+
+  //   // ARRANGE
+  //   const airline1 = accounts[1];
+  //   const airline2 = accounts[2];
+  //   const airline3 = accounts[3];
+  //   const airline4 = accounts[4];
+  //   const airline5 = accounts[5];
+
+  //   await config.flightSuretyApp.registerAirline(airline2, { from: airline1 })
+  //   await config.flightSuretyApp.registerAirline(airline3, { from: airline1 })
+  //   await config.flightSuretyApp.registerAirline(airline4, { from: airline1 })
+
+  //   const value = config.flightSuretyData.airlineCounter.call();
+  //   console.log('value:', value)
+
+  //   // ACT
+  //   // try {
+  //   //   await config.flightSuretyApp.registerAirline(airline5, { from: airline1 })
+  //   //   await config.flightSuretyApp.registerAirline(airline5, { from: airline2 })
+  //   //   await config.flightSuretyApp.registerAirline(airline5, { from: airline3 })
+
+  //   // } catch (e) {}
+
+  //   const wasRegistered = await config.flightSuretyData.isAirline.call(airline5)
+
+  //   // ASSERT
+  //   assert.equal(wasRegistered, true, "Multi-party call failed");
+  // });
 })
