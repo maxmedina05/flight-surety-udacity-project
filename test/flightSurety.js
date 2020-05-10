@@ -119,43 +119,54 @@ contract('Flight Surety Tests', async (accounts) => {
 
     // ACT
     try {
-      await config.flightSuretyApp.registerAirline(newAirline, {
-        from: config.firstAirline,
+      await config.flightSuretyData.registerAirline(newAirline, {
+        from: accounts[0],
       })
     } catch (e) {}
     let result = await config.flightSuretyData.isAirline.call(newAirline)
+
+    await config.flightSuretyData.unregisterAirline(newAirline, {
+      from: accounts[0],
+    })
 
     // ASSERT
     assert.equal(result, true)
   })
 
-  // it('should only register fifth or subsequent airlines with consensus of 50% of registered airlines', async () => {
+  it('should only register fifth or subsequent airlines with consensus of 50% of registered airlines', async () => {
+    // ARRANGE
+    const firstAirline = accounts[0]
+    const airline2 = accounts[2]
+    const airline3 = accounts[3]
+    const airline4 = accounts[4]
+    const airline5 = accounts[5]
 
-  //   // ARRANGE
-  //   const airline1 = accounts[1];
-  //   const airline2 = accounts[2];
-  //   const airline3 = accounts[3];
-  //   const airline4 = accounts[4];
-  //   const airline5 = accounts[5];
+    await config.flightSuretyData.registerAirline(airline2, {
+      from: firstAirline,
+    })
+    await config.flightSuretyData.registerAirline(airline3, {
+      from: firstAirline,
+    })
+    await config.flightSuretyData.registerAirline(airline4, {
+      from: firstAirline,
+    })
 
-  //   await config.flightSuretyApp.registerAirline(airline2, { from: airline1 })
-  //   await config.flightSuretyApp.registerAirline(airline3, { from: airline1 })
-  //   await config.flightSuretyApp.registerAirline(airline4, { from: airline1 })
+    // ACT
+    try {
+      await config.flightSuretyData.registerAirline(airline5, {
+        from: firstAirline,
+      })
+      await config.flightSuretyData.registerAirline(airline5, {
+        from: airline2,
+      })
+      await config.flightSuretyData.registerAirline(airline5, {
+        from: airline3,
+      })
+    } catch (e) {}
 
-  //   const value = config.flightSuretyData.airlineCounter.call();
-  //   console.log('value:', value)
+    const wasRegistered = await config.flightSuretyData.isAirline.call(airline5)
 
-  //   // ACT
-  //   // try {
-  //   //   await config.flightSuretyApp.registerAirline(airline5, { from: airline1 })
-  //   //   await config.flightSuretyApp.registerAirline(airline5, { from: airline2 })
-  //   //   await config.flightSuretyApp.registerAirline(airline5, { from: airline3 })
-
-  //   // } catch (e) {}
-
-  //   const wasRegistered = await config.flightSuretyData.isAirline.call(airline5)
-
-  //   // ASSERT
-  //   assert.equal(wasRegistered, true, "Multi-party call failed");
-  // });
+    // ASSERT
+    assert.equal(wasRegistered, true, 'Multi-party call failed')
+  })
 })

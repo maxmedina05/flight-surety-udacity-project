@@ -152,10 +152,15 @@ contract FlightSuretyData {
                 if (multiCalls.length >= M) {
                     airlines[_address] = Airline({isRegistered: true});
                     multiCalls = new address[](0);
-                     airlineCounter++;
+                    airlineCounter++;
                 }
             }
         }
+    }
+
+    function unregisterAirline(address _address) external requireContractOwner {
+        airlines[_address].isRegistered = false;
+        airlineCounter--;
     }
 
     function fund() public payable {}
