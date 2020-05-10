@@ -71,7 +71,7 @@ contract('Flight Surety Tests', async (accounts) => {
     const airline3 = accounts[2]
     const airline4 = accounts[3]
     const airline5 = accounts[4]
-    const fee = web3.utils.toWei('1', 'ether')
+    const fee = web3.utils.toWei("10", "ether");
 
     // ACT
     try {
@@ -109,10 +109,10 @@ contract('Flight Surety Tests', async (accounts) => {
       await config.flightSuretyData.registerAirline(airline5, {
         from: airline2,
       })
-      await config.flightSuretyData.registerAirline(airline5, {
-        from: airline3,
-      })
-    } catch (e) {}
+
+    } catch (e) {
+      console.log('e:', e)
+    }
 
     const wasRegistered = await config.flightSuretyData.isAirline.call(airline5)
 

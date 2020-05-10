@@ -196,7 +196,7 @@ contract FlightSuretyData {
             !airlines[msg.sender].isParticipant,
             "Airline already paid participation fee"
         );
-        require(msg.value > PARTICIPATION_FEE, "Insufficient balance");
+        require(msg.value >= PARTICIPATION_FEE, "Insufficient balance");
 
         airlines[msg.sender].isParticipant = true;
         funds[msg.sender] = msg.value;
