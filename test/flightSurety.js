@@ -71,7 +71,7 @@ contract('Flight Surety Tests', async (accounts) => {
     const airline3 = accounts[2]
     const airline4 = accounts[3]
     const airline5 = accounts[4]
-    const fee = web3.utils.toWei("10", "ether");
+    const fee = web3.utils.toWei('10', 'ether')
 
     // ACT
     try {
@@ -109,7 +109,6 @@ contract('Flight Surety Tests', async (accounts) => {
       await config.flightSuretyData.registerAirline(airline5, {
         from: airline2,
       })
-
     } catch (e) {
       console.log('e:', e)
     }
@@ -120,58 +119,123 @@ contract('Flight Surety Tests', async (accounts) => {
     assert.equal(wasRegistered, true, 'Airline was not registered')
   })
 
-  // it(`(multiparty) has correct initial isOperational() value`, async function () {
-  //   // Get operating status
-  //   let status = await config.flightSuretyData.isOperational.call()
-  //   assert.equal(status, true, 'Incorrect initial operating status value')
-  // })
+  it(`(multiparty) has correct initial isOperational() value`, async function () {
+    // Get operating status
+    let status = await config.flightSuretyData.isOperational.call()
+    assert.equal(status, true, 'Incorrect initial operating status value')
+  })
 
-  //   it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
+  it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
+    // Ensure that access is denied for non-Contract Owner account
+    let accessDenied = false
+    try {
+      await config.flightSuretyData.setOperatingStatus(false, {
+        from: config.testAddresses[2],
+      })
+    } catch (e) {
+      accessDenied = true
+    }
+    assert.equal(accessDenied, true, 'Access not restricted to Contract Owner')
+  })
 
-  //       // Ensure that access is denied for non-Contract Owner account
-  //       let accessDenied = false;
-  //       try
-  //       {
-  //           await config.flightSuretyData.setOperatingStatus(false, { from: config.testAddresses[2] });
-  //       }
-  //       catch(e) {
-  //           accessDenied = true;
-  //       }
-  //       assert.equal(accessDenied, true, "Access not restricted to Contract Owner");
+  it(`(multiparty) can allow access to setOperatingStatus() for Contract Owner account`, async function () {
+    // Ensure that access is allowed for Contract Owner account
+    let accessDenied = false
+    try {
+      await config.flightSuretyData.setOperatingStatus(false)
+    } catch (e) {
+      accessDenied = true
+    }
+    assert.equal(accessDenied, false, 'Access not restricted to Contract Owner')
+  })
 
-  //   });
+  it(`(multiparty) can block access to functions using requireIsOperational when operating status is false`, async function () {
+    await config.flightSuretyData.setOperatingStatus(false)
 
-  //   it(`(multiparty) can allow access to setOperatingStatus() for Contract Owner account`, async function () {
+    let reverted = false
+    try {
+      await config.flightSurety.setTestingMode(true)
+    } catch (e) {
+      reverted = true
+    }
+    assert.equal(reverted, true, 'Access not blocked for requireIsOperational')
 
-  //       // Ensure that access is allowed for Contract Owner account
-  //       let accessDenied = false;
-  //       try
-  //       {
-  //           await config.flightSuretyData.setOperatingStatus(false);
-  //       }
-  //       catch(e) {
-  //           accessDenied = true;
-  //       }
-  //       assert.equal(accessDenied, false, "Access not restricted to Contract Owner");
+    // Set it back for other tests to work
+    await config.flightSuretyData.setOperatingStatus(true)
+  })
 
-  //   });
+  it('should transfer money to airline after purchase', async () => {
+    const airline1 = accounts[0]
+    const insuree = accounts[5]
+    const price = web3.utils.toWei('1', 'ether')
+    const timestamp = new Date('2020-05-10').getTime()
+    const balanceBeforePurchase = await web3.eth.getBalance(airline1)
+    const balanceBeforePurchaseETH = web3.utils.fromWei(
+      balanceBeforePurchase,
+      'ether',
+    )
 
-  //   it(`(multiparty) can block access to functions using requireIsOperational when operating status is false`, async function () {
+    await config.flightSuretyData.registerFlight(
+      '1001',
+      10,
+      timestamp,
+      airline1,
+      { from: airline1 },
+    )
 
-  //       await config.flightSuretyData.setOperatingStatus(false);
+    await config.flightSuretyData.buy('1001', timestamp, airline1, {
+      from: insuree,
+      value: price,
+    })
 
-  //       let reverted = false;
-  //       try
-  //       {
-  //           await config.flightSurety.setTestingMode(true);
-  //       }
-  //       catch(e) {
-  //           reverted = true;
-  //       }
-  //       assert.equal(reverted, true, "Access not blocked for requireIsOperational");
+    const balanceAfterPurchase = await web3.eth.getBalance(airline1)
+    const balanceAfterPurchaseETH = web3.utils.fromWei(
+      balanceAfterPurchase,
+      'ether',
+    )
 
-  //       // Set it back for other tests to work
-  //       await config.flightSuretyData.setOperatingStatus(true);
+    assert.equal(
+      Math.floor(balanceBeforePurchaseETH) + 1,
+      Math.floor(balanceAfterPurchaseETH),
+    )
+  })
 
-  //   });
+  it('should allow passengers to pay up to 1 ether for purchasing insurance', async () => {
+    const price = web3.utils.toWei('5', 'ether')
+    const airline1 = accounts[0]
+    const insuree = accounts[5]
+    const timestamp = new Date('2020-05-10').getTime()
+    let reverted = false
+
+    try {
+      await config.flightSuretyData.buy('1001', timestamp, airline1, {
+        from: insuree,
+        value: price,
+      })
+    } catch (e) {
+      reverted = true
+    }
+
+    assert.equal(
+      reverted,
+      true,
+      'Access not blocked for requireNoMoreThanOneEther',
+    )
+  })
+
+  it.skip('should credit passengers 1.5X of their payment if flight is delayed', async () => {
+    const price = web3.utils.toWei('1', 'ether')
+    const airline1 = accounts[0]
+    const insuree = accounts[5]
+    const timestamp = new Date('2020-05-10').getTime()
+
+    const passengerAvailableCredit = await config.flightSuretyData.getPassengerAvailableCredit.call(
+      insuree,
+    )
+    const balanceBeforePurchaseETH = web3.utils.fromWei(insuree, 'ether')
+
+    assert.equal(balanceBeforePurchaseETH, 0)
+  })
+
+  it.skip('should allow passengers to withdraw their funds after receiving credit', async () => {})
 })

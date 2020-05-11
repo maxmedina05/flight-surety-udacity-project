@@ -33,9 +33,15 @@ contract FlightSuretyData {
         bool isParticipant;
     }
 
+    struct Insuree {
+        uint256 value;
+        bytes32 key;
+    }
+
     mapping(address => bool) private authorizedCallers;
     mapping(address => Airline) private airlines;
     mapping(bytes32 => Flight) private flights;
+    mapping(address => Insuree) private insurees;
     mapping(address => address[]) registrationVotes;
     mapping(address => uint256) internal funds;
     mapping(address => uint256) internal balances;
@@ -74,6 +80,11 @@ contract FlightSuretyData {
      */
     modifier requireContractOwner() {
         require(msg.sender == contractOwner, "Caller is not contract owner");
+        _;
+    }
+
+    modifier requireNoMoreThanOneEther() {
+        require(msg.value <= 1 ether, "Value exceeds the limit of 1 Ether");
         _;
     }
 
@@ -190,6 +201,35 @@ contract FlightSuretyData {
         airlineCounter--;
     }
 
+    /**
+     * @dev Register a future flight for insuring.
+     *
+     */
+    function registerFlight(
+        string flight,
+        uint8 status,
+        uint256 timestamp,
+        address airline
+    ) external {
+        bytes32 key = keccak256(abi.encodePacked(airline, flight, timestamp));
+
+        require(!flights[key].isRegistered, "Flight is already registered");
+
+        flights[key] = Flight({
+            isRegistered: true,
+            statusCode: 10,
+            updatedTimestamp: timestamp,
+            airline: airline
+        });
+    }
+
+    function getPassengerAvailableCredit(address passenger)
+        external
+        returns (uint256)
+    {
+        return balances[passenger];
+    }
+
     function fund() public payable requireIsOperational {
         require(airlines[msg.sender].isRegistered, "Airline is not registered");
         require(
@@ -202,6 +242,43 @@ contract FlightSuretyData {
         funds[msg.sender] = msg.value;
         airlineCounter++;
     }
+
+    /**
+     * @dev Called after oracle has updated flight status
+     *
+     */
+
+    /**
+     * @dev Buy insurance for a flight
+     *
+     */
+
+    function buy(string flight, uint256 timestamp, address airline)
+        external
+        payable
+        requireIsOperational
+    {
+        require(msg.value > 0 ether, "Value must be greater than 0");
+        require(msg.value <= 1 ether, "Value exceeds the limit of 1 Ether");
+
+        bytes32 key = keccak256(abi.encodePacked(airline, flight, timestamp));
+        insurees[msg.sender] = Insuree({value: msg.value, key: key});
+
+        airline.transfer(msg.value);
+    }
+
+    /**
+     *  @dev Credits payouts to insurees
+     */
+    function creditInsurees() external pure {
+        
+    }
+
+    /**
+     *  @dev Transfers eligible payout funds to insuree
+     *
+     */
+    function pay() external pure {}
 
     function getFlightKey(
         address airline,
