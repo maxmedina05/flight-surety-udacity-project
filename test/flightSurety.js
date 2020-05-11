@@ -5,20 +5,29 @@ contract('Flight Surety Tests', async (accounts) => {
   var config
 
   before('setup contract', async () => {
-    config = await Test.Config(accounts)
-    await config.flightSuretyData.authorizeCaller(
-      config.flightSuretyApp.address,
-    )
+    try {
+      config = await Test.Config(accounts)
+      await config.flightSuretyData.authorizeCaller(
+        config.flightSuretyApp.address,
+      )
+    } catch(e) {
+      console.log(e)
+    }
   })
 
   /****************************************************************************************/
   /* Operations and Settings                                                              */
   /****************************************************************************************/
-  it('should register first airline when contract is deployed', async () => {
-    const isAirlineRegistered = await config.flightSuretyData.isAirline.call(
-      config.owner,
-    )
-    assert.equal(isAirlineRegistered, true, 'First Airline is not registered')
+  it.only('should register first airline when contract is deployed', async () => {
+    let result = false
+
+    try {
+      // result = await config.flightSuretyApp.isAirline.call(config.firstAirline)
+    } catch (e) {
+      console.log(e)
+    }
+
+    assert.equal(result, true, 'First Airline is not registered')
   })
 
   it('should fail if a non registered airline tries to register a new airline', async () => {

@@ -7,25 +7,18 @@ contract FlightSuretyData {
     using SafeMath for uint256;
 
     /********************************************************************************************/
-    /*                                       DATA CONSTANTS                                     */
-    /********************************************************************************************/
-
-    uint256 public constant PARTICIPATION_FEE = 10 ether;
-
-    /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
     address private contractOwner; // Account used to deploy contract
     bool private operational = true; // Blocks all state changes throughout the contract if false
-    uint256 public airlineCounter = 0;
-    address[] multiCalls = new address[](0);
+    uint256 private participantCounter = 0; // No of participants for consensus
 
     struct Flight {
         bool isRegistered;
         uint8 statusCode;
-        uint256 updatedTimestamp;
         address airline;
+        uint256 updatedTimestamp;
     }
 
     struct Airline {
@@ -33,18 +26,17 @@ contract FlightSuretyData {
         bool isParticipant;
     }
 
-    struct Insuree {
+    struct Insurance {
         uint256 value;
-        bytes32 key;
+        address airline;
     }
 
     mapping(address => bool) private authorizedCallers;
     mapping(address => Airline) private airlines;
     mapping(bytes32 => Flight) private flights;
-    mapping(address => Insuree) private insurees;
-    mapping(address => address[]) registrationVotes;
-    mapping(address => uint256) internal funds;
-    mapping(address => uint256) internal balances;
+    mapping(address => Insurance) private insurances; // insurance using passanger address as key
+    mapping(address => uint256) private funds; // Airlines funds
+    mapping(address => uint256) private balances; // Passengers available balance for withdraw
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -83,11 +75,6 @@ contract FlightSuretyData {
         _;
     }
 
-    modifier requireNoMoreThanOneEther() {
-        require(msg.value <= 1 ether, "Value exceeds the limit of 1 Ether");
-        _;
-    }
-
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -100,6 +87,10 @@ contract FlightSuretyData {
 
     function isOperational() public view returns (bool) {
         return operational;
+    }
+
+    function getParticipantCounter() external view returns (uint256) {
+        return participantCounter;
     }
 
     /**
@@ -127,165 +118,93 @@ contract FlightSuretyData {
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
-    function isAirline(address _address) external view returns (bool) {
+    function isAirlineRegistered(address _address)
+        external
+        view
+        returns (bool)
+    {
         return airlines[_address].isRegistered;
     }
 
-    /**
-     * @dev Add an airline to the registration queue
-     *      Can only be called from FlightSuretyApp contract
-     *
-     */
+    function isFunded(address _address) external view returns (bool) {
+        return airlines[_address].isParticipant;
+    }
+
+    function isFlightRegistered(bytes32 key) external view returns (bool) {
+        return flights[key].isRegistered;
+    }
+
     function registerAirline(address _address) external {
-        require(
-            !airlines[_address].isRegistered,
-            "Airline is already registered."
-        );
-
-        if (airlineCounter == 0) {
-            airlines[_address] = Airline({
-                isRegistered: true,
-                isParticipant: true
-            });
-            airlineCounter++;
-        } else {
-            require(
-                airlines[msg.sender].isRegistered,
-                "Only existing airline may register new airlines"
-            );
-            require(
-                airlines[msg.sender].isParticipant,
-                "Airline has not paid participation fee"
-            );
-
-            if (airlineCounter < 4) {
-                airlines[_address] = Airline({
-                    isRegistered: true,
-                    isParticipant: false
-                });
-                // airlineCounter++;
-            } else {
-                bool isDuplicate = false;
-                for (uint256 c = 0; c < multiCalls.length; c++) {
-                    if (multiCalls[c] == msg.sender) {
-                        isDuplicate = true;
-                        break;
-                    }
-                }
-                require(
-                    !isDuplicate,
-                    "Caller has already called this function."
-                );
-
-                multiCalls.push(msg.sender);
-                uint256 M = airlineCounter / 2;
-                if (multiCalls.length >= M) {
-                    airlines[_address] = Airline({
-                        isRegistered: true,
-                        isParticipant: false
-                    });
-                    multiCalls = new address[](0);
-                    // airlineCounter++;
-                }
-            }
-        }
-    }
-
-    function unregisterAirline(address _address)
-        external
-        requireContractOwner
-        requireIsOperational
-    {
-        airlines[_address].isRegistered = false;
-        airlines[_address].isParticipant = false;
-        airlineCounter--;
-    }
-
-    /**
-     * @dev Register a future flight for insuring.
-     *
-     */
-    function registerFlight(
-        string flight,
-        uint8 status,
-        uint256 timestamp,
-        address airline
-    ) external {
-        bytes32 key = keccak256(abi.encodePacked(airline, flight, timestamp));
-
-        require(!flights[key].isRegistered, "Flight is already registered");
-
-        flights[key] = Flight({
+        airlines[_address] = Airline({
             isRegistered: true,
-            statusCode: 10,
-            updatedTimestamp: timestamp,
-            airline: airline
+            isParticipant: false
         });
     }
 
-    function getPassengerAvailableCredit(address passenger)
+    function registerFlight(bytes32 key, address airline, uint256 timestamp)
         external
-        returns (uint256)
     {
-        return balances[passenger];
-    }
-
-    function fund() public payable requireIsOperational {
-        require(airlines[msg.sender].isRegistered, "Airline is not registered");
-        require(
-            !airlines[msg.sender].isParticipant,
-            "Airline already paid participation fee"
-        );
-        require(msg.value >= PARTICIPATION_FEE, "Insufficient balance");
-
-        airlines[msg.sender].isParticipant = true;
-        funds[msg.sender] = msg.value;
-        airlineCounter++;
+        flights[key] = Flight({
+            isRegistered: true,
+            statusCode: 10,
+            airline: airline,
+            updatedTimestamp: timestamp
+        });
     }
 
     /**
-     * @dev Called after oracle has updated flight status
+     * @dev add funds to airline
      *
      */
-
-    /**
-     * @dev Buy insurance for a flight
-     *
-     */
-
-    function buy(string flight, uint256 timestamp, address airline)
+    function fund(address _address, uint256 amount)
         external
-        payable
         requireIsOperational
     {
-        require(msg.value > 0 ether, "Value must be greater than 0");
-        require(msg.value <= 1 ether, "Value exceeds the limit of 1 Ether");
+        airlines[_address].isParticipant = true;
+        funds[_address] = amount;
 
-        bytes32 key = keccak256(abi.encodePacked(airline, flight, timestamp));
-        insurees[msg.sender] = Insuree({value: msg.value, key: key});
-
-        airline.transfer(msg.value);
+        participantCounter++;
     }
 
-    /**
-     *  @dev Credits payouts to insurees
-     */
-    function creditInsurees() external pure {
-        
+    function getFunds(address _address) external view returns (uint256) {
+        return funds[_address];
     }
 
-    /**
-     *  @dev Transfers eligible payout funds to insuree
-     *
-     */
-    function pay() external pure {}
+    function buyInsurance(address insuree, address airline, uint256 amount)
+        external
+        requireIsOperational
+    {
+        insurances[insuree] = Insurance({value: amount, airline: airline});
 
-    function getFlightKey(
-        address airline,
-        string memory flight,
-        uint256 timestamp
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(airline, flight, timestamp));
+        funds[airline] = funds[airline].add(amount);
+    }
+
+    function creditInsuree(address insuree) external requireIsOperational {
+        address airline = insurances[insuree].airline;
+        uint256 expectedAmount = insurances[insuree].value.mul(3).div(2);
+        balances[insuree].add(expectedAmount);
+        funds[airline].sub(expectedAmount);
+    }
+
+    function getBalance(address insuree)
+        external
+        view
+        requireIsOperational
+        returns (uint256)
+    {
+        return balances[insuree];
+    }
+
+    function withdraw(address insuree)
+        external
+        requireIsOperational
+        returns (uint256)
+    {
+        uint256 amount = balances[insuree];
+
+        delete balances[insuree];
+
+        return amount;
     }
 
     /**
@@ -293,6 +212,6 @@ contract FlightSuretyData {
      *
      */
     function() external payable {
-        fund();
+        // fund();
     }
 }

@@ -14,9 +14,16 @@ contract FlightSuretyApp {
     using SafeMath for uint256; // Allow SafeMath functions to be called for all uint256 types (similar to "prototype" in Javascript)
 
     /********************************************************************************************/
+    /*                                       DATA CONSTANTS                                     */
+    /********************************************************************************************/
+
+    uint256 public constant PARTICIPATION_FEE = 10 ether;
+
+    /********************************************************************************************/
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
     FlightSuretyData flightSuretyData;
+    address[] multiCalls = new address[](0);
 
     // Flight status codes
     uint8 private constant STATUS_CODE_UNKNOWN = 0;
@@ -42,7 +49,10 @@ contract FlightSuretyApp {
      */
     modifier requireIsOperational() {
         // Modify to call data contract's status
-        require(true, "Contract is currently not operational");
+        require(
+            flightSuretyData.isOperational(),
+            "Contract is currently not operational"
+        );
         _; // All modifiers require an "_" which indicates where the function body will be added
     }
 
@@ -80,12 +90,68 @@ contract FlightSuretyApp {
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
 
-    function registerAirline(address _address) external {
-        flightSuretyData.registerAirline(_address);
+    function isAirline(address _address) public view returns (bool) {
+        return flightSuretyData.isAirlineRegistered(_address);
     }
 
-    function isAirline(address _address) external view returns (bool) {
-        flightSuretyData.isAirline(_address);
+    function registerAirline(address _address) external {
+        require(!isAirline(_address), "Airline is already registered.");
+
+        if (flightSuretyData.getParticipantCounter() == 0) {
+            flightSuretyData.registerAirline(_address);
+        } else {
+            require(
+                isAirline(msg.sender),
+                "Only existing airline may register new airlines"
+            );
+            require(
+                flightSuretyData.isFunded(msg.sender),
+                "Airline has not paid participation fee"
+            );
+
+            if (flightSuretyData.getParticipantCounter() < 4) {
+                flightSuretyData.registerAirline(_address);
+            } else {
+                bool isDuplicate = false;
+                for (uint256 c = 0; c < multiCalls.length; c++) {
+                    if (multiCalls[c] == msg.sender) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+
+                require(
+                    !isDuplicate,
+                    "Caller has already called this function."
+                );
+
+                multiCalls.push(msg.sender);
+                uint256 M = flightSuretyData.getParticipantCounter() / 2;
+                if (multiCalls.length >= M) {
+                    flightSuretyData.registerAirline(_address);
+                    multiCalls = new address[](0);
+                }
+            }
+        }
+    }
+
+    function fund() public payable requireIsOperational {
+        require(
+            !flightSuretyData.isFunded(msg.sender),
+            "Airline already paid participation fees"
+        );
+        require(msg.value == PARTICIPATION_FEE, "Participant Fee is 10 ether");
+
+        contractOwner.transfer(msg.value);
+        flightSuretyData.fund(msg.sender, msg.value);
+    }
+
+    function buy(address airline) public payable requireIsOperational {
+        require(msg.value > 0, "Value must be greater than 0.");
+        require(msg.value <= 1 ether, "Value must at least 1 ether.");
+
+        airline.transfer(msg.value);
+        flightSuretyData.buyInsurance(msg.sender, airline, msg.value);
     }
 
     /**
@@ -290,7 +356,34 @@ contract FlightSuretyApp {
 contract FlightSuretyData {
     function registerAirline(address _address) external;
 
-    function isAirline(address _address) external view returns (bool);
+    function isAirlineRegistered(address _address) external view returns (bool);
+
+    function isFunded(address _address) external view returns (bool);
 
     function isOperational() public view returns (bool);
+
+    function isFlightRegistered(bytes32 key) public view returns (bool);
+
+    function registerFlight(
+        bytes32 key,
+        uint8 status,
+        address airline,
+        string flight,
+        uint256 timestamp
+    ) external;
+
+    function fund(address _address, uint256 amount) external;
+
+    function getFunds(address _address) external view returns (uint256);
+
+    function buyInsurance(address insuree, address airline, uint256 amount)
+        external;
+
+    function creditInsuree(address insuree) external;
+
+    function getBalance(address insuree) external;
+
+    function withdraw(address insuree) external returns (uint256);
+
+    function getParticipantCounter() public view returns (uint256);
 }
