@@ -13,6 +13,7 @@ contract FlightSuretyData {
     address private contractOwner; // Account used to deploy contract
     bool private operational = true; // Blocks all state changes throughout the contract if false
     uint256 private participantCounter = 0; // No of participants for consensus
+    uint256 private airlineCounter = 0;
 
     struct Flight {
         bool isRegistered;
@@ -93,6 +94,10 @@ contract FlightSuretyData {
         return participantCounter;
     }
 
+    function getAirlineCounter() external view returns (uint256) {
+        return airlineCounter;
+    }
+
     /**
      * @dev Sets contract operations on/off
      *
@@ -130,15 +135,17 @@ contract FlightSuretyData {
         return airlines[_address].isParticipant;
     }
 
-    function isFlightRegistered(bytes32 key) external view returns (bool) {
-        return flights[key].isRegistered;
-    }
-
     function registerAirline(address _address) external {
         airlines[_address] = Airline({
             isRegistered: true,
             isParticipant: false
         });
+
+        airlineCounter++;
+    }
+
+    function isFlightRegistered(bytes32 key) external view returns (bool) {
+        return flights[key].isRegistered;
     }
 
     function registerFlight(bytes32 key, address airline, uint256 timestamp)

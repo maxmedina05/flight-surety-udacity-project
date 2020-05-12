@@ -97,7 +97,7 @@ contract FlightSuretyApp {
     function registerAirline(address _address) external {
         require(!isAirline(_address), "Airline is already registered.");
 
-        if (flightSuretyData.getParticipantCounter() == 0) {
+        if (flightSuretyData.getAirlineCounter() == 0) {
             flightSuretyData.registerAirline(_address);
         } else {
             require(
@@ -152,6 +152,24 @@ contract FlightSuretyApp {
 
         airline.transfer(msg.value);
         flightSuretyData.buyInsurance(msg.sender, airline, msg.value);
+    }
+
+    function airlineCounter() public view returns (uint256) {
+        return flightSuretyData.getAirlineCounter();
+    }
+
+    /**
+     * @dev Register a future flight for insuring.
+     *
+     */
+    function registerFlight(string flight, uint256 timestamp, address airline)
+        external
+    {
+        bytes32 key = keccak256(abi.encodePacked(airline, flight, timestamp));
+
+        require(!flightSuretyData.isFlightRegistered(key), "Flight is already registered");
+
+        flightSuretyData.registerFlight(key, airline, timestamp);
     }
 
     /**
@@ -366,9 +384,7 @@ contract FlightSuretyData {
 
     function registerFlight(
         bytes32 key,
-        uint8 status,
         address airline,
-        string flight,
         uint256 timestamp
     ) external;
 
@@ -386,4 +402,6 @@ contract FlightSuretyData {
     function withdraw(address insuree) external returns (uint256);
 
     function getParticipantCounter() public view returns (uint256);
+
+    function getAirlineCounter() external view returns (uint256);
 }

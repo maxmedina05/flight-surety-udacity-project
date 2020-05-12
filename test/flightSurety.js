@@ -10,7 +10,7 @@ contract('Flight Surety Tests', async (accounts) => {
       await config.flightSuretyData.authorizeCaller(
         config.flightSuretyApp.address,
       )
-    } catch(e) {
+    } catch (e) {
       console.log(e)
     }
   })
@@ -18,11 +18,11 @@ contract('Flight Surety Tests', async (accounts) => {
   /****************************************************************************************/
   /* Operations and Settings                                                              */
   /****************************************************************************************/
-  it.only('should register first airline when contract is deployed', async () => {
+  it('should register first airline when contract is deployed', async () => {
     let result = false
 
     try {
-      // result = await config.flightSuretyApp.isAirline.call(config.firstAirline)
+      result = await config.flightSuretyApp.isAirline.call(config.owner)
     } catch (e) {
       console.log(e)
     }
@@ -32,7 +32,7 @@ contract('Flight Surety Tests', async (accounts) => {
 
   it('should fail if a non registered airline tries to register a new airline', async () => {
     // ARRANGE
-    let newAirline = accounts[2]
+    const newAirline = accounts[2]
     let reverted = false
 
     // ACT
@@ -55,16 +55,16 @@ contract('Flight Surety Tests', async (accounts) => {
 
     // ACT
     try {
-      await config.flightSuretyData.registerAirline(firstAirline, {
+      await config.flightSuretyApp.registerAirline(firstAirline, {
         from: config.owner,
       })
 
-      await config.flightSuretyData.registerAirline(newAirline, {
+      await config.flightSuretyApp.registerAirline(newAirline, {
         from: firstAirline,
       })
     } catch (e) {}
 
-    const result = await config.flightSuretyData.isAirline.call(newAirline)
+    const result = await config.flightSuretyApp.isAirline.call(newAirline)
 
     // ASSERT
     assert.equal(
@@ -84,45 +84,49 @@ contract('Flight Surety Tests', async (accounts) => {
 
     // ACT
     try {
-      // already registered
-      // await config.flightSuretyData.registerAirline(airline2, {
-      //   from: config.owner,
-      // })
+      await config.flightSuretyApp.fund({
+        from: config.owner,
+        value: fee,
+      })
 
-      await config.flightSuretyData.registerAirline(airline3, {
+      await config.flightSuretyData.registerAirline(airline2, {
         from: config.owner,
       })
 
-      await config.flightSuretyData.registerAirline(airline4, {
+      await config.flightSuretyApp.registerAirline(airline3, {
         from: config.owner,
       })
 
-      await config.flightSuretyData.fund({
+      await config.flightSuretyApp.registerAirline(airline4, {
+        from: config.owner,
+      })
+
+      await config.flightSuretyApp.fund({
         from: airline2,
         value: fee,
       })
 
-      await config.flightSuretyData.fund({
+      await config.flightSuretyApp.fund({
         from: airline3,
         value: fee,
       })
 
-      await config.flightSuretyData.fund({
+      await config.flightSuretyApp.fund({
         from: airline4,
         value: fee,
       })
 
-      await config.flightSuretyData.registerAirline(airline5, {
+      await config.flightSuretyApp.registerAirline(airline5, {
         from: config.owner,
       })
-      await config.flightSuretyData.registerAirline(airline5, {
+      await config.flightSuretyApp.registerAirline(airline5, {
         from: airline2,
       })
     } catch (e) {
       console.log('e:', e)
     }
 
-    const wasRegistered = await config.flightSuretyData.isAirline.call(airline5)
+    const wasRegistered = await config.flightSuretyApp.isAirline.call(airline5)
 
     // ASSERT
     assert.equal(wasRegistered, true, 'Airline was not registered')
@@ -184,15 +188,14 @@ contract('Flight Surety Tests', async (accounts) => {
       'ether',
     )
 
-    await config.flightSuretyData.registerFlight(
+    await config.flightSuretyApp.registerFlight(
       '1001',
-      10,
       timestamp,
       airline1,
       { from: airline1 },
     )
 
-    await config.flightSuretyData.buy('1001', timestamp, airline1, {
+    await config.flightSuretyApp.buy(airline1, {
       from: insuree,
       value: price,
     })
@@ -213,11 +216,11 @@ contract('Flight Surety Tests', async (accounts) => {
     const price = web3.utils.toWei('5', 'ether')
     const airline1 = accounts[0]
     const insuree = accounts[5]
-    const timestamp = new Date('2020-05-10').getTime()
+    // const timestamp = new Date('2020-05-10').getTime()
     let reverted = false
 
     try {
-      await config.flightSuretyData.buy('1001', timestamp, airline1, {
+      await config.flightSuretyApp.buy(airline1, {
         from: insuree,
         value: price,
       })
