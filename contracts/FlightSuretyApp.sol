@@ -76,6 +76,7 @@ contract FlightSuretyApp {
         contractOwner = msg.sender;
         flightSuretyData = FlightSuretyData(dataContract);
         flightSuretyData.registerAirline(msg.sender);
+        flightSuretyData.fund(msg.sender, 10 ether);
     }
 
     /********************************************************************************************/
@@ -144,6 +145,10 @@ contract FlightSuretyApp {
 
         contractOwner.transfer(msg.value);
         flightSuretyData.fund(msg.sender, msg.value);
+    }
+
+    function getFunds() public view requireIsOperational returns(uint256) {
+        return flightSuretyData.getFunds(msg.sender);
     }
 
     function buy(address airline) public payable requireIsOperational {

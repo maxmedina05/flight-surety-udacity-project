@@ -30,12 +30,61 @@
       </button>
     </nav>
 
-    <main class="container">
+    <div class="container">
       <div id="display-wrapper" class="top-20"></div>
       <div class="row top-20">
         <label class="form">Flight</label>
         <input type="text" id="flight-number" />
         <btn class="btn btn-primary" id="submit-oracle">Submit to Oracles</btn>
+      </div>
+    </div>
+
+    <main>
+      <div class="paper-form">
+        <h2>Registered Airline</h2>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Address</th>
+              <th scope="col">Funds</th>
+            </tr>
+          </thead>
+
+          <tbody id="registeredAirlineTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="paper-form">
+        <form id="registerAirlineForm">
+          <h2>Register Airline</h2>
+
+          <div class="form-group">
+            <label for="airline">Airline address</label>
+            <select name="airline" id="registerAirlineFormAirlineSelect" class="form-control">
+              <option selected disabled>Select one:</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" id="registerAirlineBtn">
+            Register
+          </button>
+        </form>
+      </div>
+
+      <div class="paper-form">
+        <form id="fundAirlineForm">
+          <h2>Fund Airline</h2>
+
+          <div class="form-group">
+            <label for="airline">Airline address</label>
+            <select id="fundAirlineFormAirlineSelect" class="form-control">
+              <option selected disabled>Select one:</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn btn-primary" id="fundAirlineBtn">Fund</button>
+        </form>
       </div>
     </main>
   </body>

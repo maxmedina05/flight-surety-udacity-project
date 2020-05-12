@@ -1,7 +1,7 @@
 body {
-    background-image: url('flight.jpg'); /* Source: iStockPhoto */
+    /* background-image: url('flight.jpg');
     background-repeat: no-repeat;
-    background-size: cover;
+    background-size: cover; */
 }
 
 .container {
@@ -10,6 +10,10 @@ body {
     opacity: 0.9;
     color: #fff;
     padding: 40px;
+}
+
+.container > * {
+    margin-bottom: 2rem;
 }
 
 .top-20 {
@@ -39,4 +43,11 @@ label.form {
 }
 input {
     margin-right: 30px;
+}
+
+.paper-form {
+    margin: 80px auto;
+    padding: 1.5rem;
+    max-width: 640px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
 }
