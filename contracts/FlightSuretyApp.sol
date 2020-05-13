@@ -95,6 +95,10 @@ contract FlightSuretyApp {
         return flightSuretyData.isAirlineRegistered(_address);
     }
 
+    function isFlightRegistered(bytes32 key) public view returns (bool) {
+        return flightSuretyData.isFlightRegistered(key);
+    }
+
     function registerAirline(address _address) external {
         require(!isAirline(_address), "Airline is already registered.");
 
@@ -147,7 +151,7 @@ contract FlightSuretyApp {
         flightSuretyData.fund(msg.sender, msg.value);
     }
 
-    function getFunds() public view requireIsOperational returns(uint256) {
+    function getFunds() public view requireIsOperational returns (uint256) {
         return flightSuretyData.getFunds(msg.sender);
     }
 
@@ -172,9 +176,13 @@ contract FlightSuretyApp {
     {
         bytes32 key = keccak256(abi.encodePacked(airline, flight, timestamp));
 
-        require(!flightSuretyData.isFlightRegistered(key), "Flight is already registered");
+        require(
+            !flightSuretyData.isFlightRegistered(key),
+            "Flight is already registered"
+        );
 
         flightSuretyData.registerFlight(key, airline, timestamp);
+        flights.push(key);
     }
 
     /**
@@ -387,11 +395,8 @@ contract FlightSuretyData {
 
     function isFlightRegistered(bytes32 key) public view returns (bool);
 
-    function registerFlight(
-        bytes32 key,
-        address airline,
-        uint256 timestamp
-    ) external;
+    function registerFlight(bytes32 key, address airline, uint256 timestamp)
+        external;
 
     function fund(address _address, uint256 amount) external;
 

@@ -62,7 +62,11 @@
 
           <div class="form-group">
             <label for="airline">Airline address</label>
-            <select name="airline" id="registerAirlineFormAirlineSelect" class="form-control">
+            <select
+              name="airline"
+              id="registerAirlineFormAirlineSelect"
+              class="form-control"
+            >
               <option selected disabled>Select one:</option>
             </select>
           </div>
@@ -83,7 +87,93 @@
             </select>
           </div>
 
-          <button type="button" class="btn btn-primary" id="fundAirlineBtn">Fund</button>
+          <button type="button" class="btn btn-primary" id="fundAirlineBtn">
+            Fund
+          </button>
+        </form>
+      </div>
+
+      <div class="paper-form">
+        <h2>Registered Flight</h2>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Flight Number</th>
+              <th scope="col">Status Code</th>
+              <th scope="col">Airline</th>
+              <th scope="col">Timestamp</th>
+            </tr>
+          </thead>
+
+          <tbody id="registeredFlightTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="paper-form">
+        <form>
+          <h2>Register Flight</h2>
+
+          <div class="form-group">
+            <label for="airline">Airline</label>
+            <select
+              id="regFlightAirlineSelect"
+              name="airline"
+              class="form-control"
+            >
+              <option selected disabled>Select one:</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="flight">Flight Number</label>
+            <input
+              id="regFlightAirlineFlightNumber"
+              name="flight"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="date">Timestamp</label>
+            <input
+              id="regFlightAirlineTimestamp"
+              name="date"
+              type="date"
+              class="form-control"
+            />
+          </div>
+
+          <button type="button" class="btn btn-primary" id="registerFlightBtn">
+            Register
+          </button>
+        </form>
+      </div>
+
+      <div class="paper-form">
+        <form>
+          <h2>Buy Flight Insurance</h2>
+
+          <div class="form-group">
+            <label for="airline">Insuree address</label>
+            <select id="buyFlightInsuranceAirlineSelect" class="form-control">
+              <option selected disabled>Select one:</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="flightNumber">Flight Number</label>
+            <input
+              id="flightNumberInput"
+              name="flightNumber"
+              class="form-control"
+            />
+          </div>
+
+          <button type="button" class="btn btn-primary" id="BuyInsuranceBtn">
+            Buy
+          </button>
         </form>
       </div>
     </main>

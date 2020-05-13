@@ -159,6 +159,23 @@ contract FlightSuretyData {
         });
     }
 
+    function getFlight(bytes32 key)
+        external
+        returns (
+            bool isRegistered,
+            uint256 statusCode,
+            address airline,
+            uint256 timestamp
+        )
+    {
+        isRegistered = flights[key].isRegistered;
+        statusCode = flights[key].statusCode;
+        airline = flights[key].airline;
+        timestamp = flights[key].updatedTimestamp;
+
+        return (isRegistered, statusCode, airline, timestamp);
+    }
+
     /**
      * @dev add funds to airline
      *

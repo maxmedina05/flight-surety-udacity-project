@@ -5,7 +5,7 @@ body {
 }
 
 .container {
-    margin-top: 400px;
+    margin-top: 80px;
     background-color: #000;
     opacity: 0.9;
     color: #fff;
@@ -46,7 +46,7 @@ input {
 }
 
 .paper-form {
-    margin: 80px auto;
+    margin: 1.5rem auto;
     padding: 1.5rem;
     max-width: 640px;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);

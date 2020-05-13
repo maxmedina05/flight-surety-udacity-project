@@ -13,16 +13,17 @@ import './flightsurety.css'
       ])
     })
 
-    displayRegisteredArlines(contract)
+    updateData(contract)
 
-    addAirlinesToRegisterAirlineForm(contract)
-    addRegisteredAirlinesToFundAirlineForm(contract)
-
-    // DOM.elid('registerAirlineForm').addEventListener('submit', (e) =>
-    //   handleRegisterAirline(e, contract),
-    // )
-    DOM.elid('registerAirlineBtn').addEventListener('click', () => handleRegisterAirline(contract))
-    DOM.elid('fundAirlineBtn').addEventListener('click', () => handleFundAirline(contract))
+    DOM.elid('registerAirlineBtn').addEventListener('click', () =>
+      handleRegisterAirline(contract),
+    )
+    DOM.elid('fundAirlineBtn').addEventListener('click', () =>
+      handleFundAirline(contract),
+    )
+    DOM.elid('registerFlightBtn').addEventListener('click', () =>
+      handleRegisterFlight(contract),
+    )
     // User-submitted transaction
     DOM.elid('submit-oracle').addEventListener('click', () => {
       let flight = DOM.elid('flight-number').value
@@ -74,11 +75,26 @@ function display(title, description, results) {
   displayDiv.append(section)
 }
 
-function addAirlinesToRegisterAirlineForm(contract) {
-  console.log('addAirlinesToRegisterAirlineForm')
+async function populateAirlineForm(contract) {
   const select = DOM.elid('registerAirlineFormAirlineSelect')
   const airlines = contract.getAirlines()
 
+  const options = []
+
+  for (const address of airlines) {
+    const isAirlineRegistered = await contract.isAirlineRegistered(address)
+
+    if (!isAirlineRegistered) {
+      options.push(DOM.option(address, { value: address }))
+    }
+  }
+
+  DOM.appendArray(select, options)
+}
+
+async function populateFundAirlineForm(contract) {
+  const select = DOM.elid('fundAirlineFormAirlineSelect')
+  const airlines = await getRegisteredAirlines(contract)
   const options = []
 
   airlines.forEach((address) => {
@@ -88,17 +104,17 @@ function addAirlinesToRegisterAirlineForm(contract) {
   DOM.appendArray(select, options)
 }
 
-async function addRegisteredAirlinesToFundAirlineForm(contract) {
-  const select = DOM.elid('fundAirlineFormAirlineSelect')
+async function populateFlightForm(contract) {
+  const selectFlight = DOM.elid('regFlightAirlineSelect')
+  selectFlight.innerHTML = ''
   const airlines = await getRegisteredAirlines(contract)
-
   const options = []
 
   airlines.forEach((address) => {
     options.push(DOM.option(address, { value: address }))
   })
 
-  DOM.appendArray(select, options)
+  DOM.appendArray(selectFlight, options)
 }
 
 async function handleRegisterAirline(contract) {
@@ -106,7 +122,7 @@ async function handleRegisterAirline(contract) {
   const address = select.value
 
   await contract.registerAirline(address)
-  displayRegisteredArlines(contract)
+  updateData(contract)
 }
 
 async function handleFundAirline(contract) {
@@ -114,10 +130,10 @@ async function handleFundAirline(contract) {
   const address = select.value
 
   await contract.fundAirline(address)
-  displayRegisteredArlines(contract)
+  updateData(contract)
 }
 
-async function displayRegisteredArlines(contract) {
+async function populateRegisteredArlines(contract) {
   const tableBody = DOM.elid('registeredAirlineTableBody')
   tableBody.innerHTML = ''
 
@@ -146,4 +162,54 @@ async function displayRegisteredArlines(contract) {
   })
 
   DOM.appendArray(tableBody, rows)
+}
+
+async function populateRegisteredFlight(contract) {
+  const tableBody = DOM.elid('registeredFlightTableBody')
+  tableBody.innerHTML = ''
+
+  const addresses = await contract.getFlights()
+
+  console.log(addresses)
+  const registered = []
+
+  for (const address of addresses) {
+    const isRegistered = await contract.isFlightRegistered(address)
+
+    if (isRegistered) {
+    }
+  }
+
+  // const rows = []
+
+  // let idx = 1
+  // registered.forEach(({ address, fund }) => {
+  //   const row = DOM.makeElement('tr')
+  //   row.innerHTML = `<td>${idx++}</td><td>${address}</td><td>${fund} ether <td/>`
+  //   rows.push(row)
+  // })
+
+  // DOM.appendArray(tableBody, rows)
+}
+
+async function handleRegisterFlight(contract) {
+  const select = DOM.elid('regFlightAirlineSelect')
+  const flightNumberInput = DOM.elid('regFlightAirlineFlightNumber')
+  const dateInput = DOM.elid('regFlightAirlineTimestamp')
+
+  const timestamp = new Date(dateInput.value).getTime()
+
+  await contract.registerFlight(
+    flightNumberInput.value,
+    timestamp,
+    select.value,
+  )
+}
+
+function updateData(contract) {
+  populateRegisteredArlines(contract)
+  populateAirlineForm(contract)
+  populateFundAirlineForm(contract)
+  populateFlightForm(contract)
+  populateRegisteredFlight(contract)
 }

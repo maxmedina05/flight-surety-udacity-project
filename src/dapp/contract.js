@@ -118,6 +118,40 @@ export default class Contract {
     })
   }
 
+  getFlights() {
+    const self = this
+
+    return new Promise((res, rej) => {
+      self.flightSuretyApp.methods
+        .getFlights()
+        .call({ from: self.owner }, (error, result) => {
+          if (error) {
+            console.log(error)
+            rej(error)
+          } else {
+            res(result)
+          }
+        })
+    })
+  }
+
+  registerFlight(flightNumber, timestamp, airline) {
+    const self = this
+
+    return new Promise((res, rej) => {
+      self.flightSuretyApp.methods
+        .registerFlight(flightNumber, timestamp, airline)
+        .send({ from: self.owner }, (error, result) => {
+          if (error) {
+            console.log(error)
+            rej(error)
+          } else {
+            res(result)
+          }
+        })
+    })
+  }
+
   fetchFlightStatus(flight, callback) {
     let self = this
     let payload = {
