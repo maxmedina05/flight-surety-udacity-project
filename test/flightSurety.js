@@ -84,10 +84,10 @@ contract('Flight Surety Tests', async (accounts) => {
 
     // ACT
     try {
-      await config.flightSuretyApp.fund({
-        from: config.owner,
-        value: fee,
-      })
+      // await config.flightSuretyApp.fund({
+      //   from: config.owner,
+      //   value: fee,
+      // })
 
       await config.flightSuretyData.registerAirline(airline2, {
         from: config.owner,
@@ -177,41 +177,6 @@ contract('Flight Surety Tests', async (accounts) => {
     await config.flightSuretyData.setOperatingStatus(true)
   })
 
-  it('should transfer money to airline after purchase', async () => {
-    const airline1 = accounts[0]
-    const insuree = accounts[5]
-    const price = web3.utils.toWei('1', 'ether')
-    const timestamp = new Date('2020-05-10').getTime()
-    const balanceBeforePurchase = await web3.eth.getBalance(airline1)
-    const balanceBeforePurchaseETH = web3.utils.fromWei(
-      balanceBeforePurchase,
-      'ether',
-    )
-
-    await config.flightSuretyApp.registerFlight(
-      '1001',
-      timestamp,
-      airline1,
-      { from: airline1 },
-    )
-
-    await config.flightSuretyApp.buy(airline1, {
-      from: insuree,
-      value: price,
-    })
-
-    const balanceAfterPurchase = await web3.eth.getBalance(airline1)
-    const balanceAfterPurchaseETH = web3.utils.fromWei(
-      balanceAfterPurchase,
-      'ether',
-    )
-
-    assert.equal(
-      Math.floor(balanceBeforePurchaseETH) + 1,
-      Math.floor(balanceAfterPurchaseETH),
-    )
-  })
-
   it('should allow passengers to pay up to 1 ether for purchasing insurance', async () => {
     const price = web3.utils.toWei('5', 'ether')
     const airline1 = accounts[0]
@@ -234,20 +199,4 @@ contract('Flight Surety Tests', async (accounts) => {
       'Access not blocked for requireNoMoreThanOneEther',
     )
   })
-
-  it.skip('should credit passengers 1.5X of their payment if flight is delayed', async () => {
-    const price = web3.utils.toWei('1', 'ether')
-    const airline1 = accounts[0]
-    const insuree = accounts[5]
-    const timestamp = new Date('2020-05-10').getTime()
-
-    const passengerAvailableCredit = await config.flightSuretyData.getPassengerAvailableCredit.call(
-      insuree,
-    )
-    const balanceBeforePurchaseETH = web3.utils.fromWei(insuree, 'ether')
-
-    assert.equal(balanceBeforePurchaseETH, 0)
-  })
-
-  it.skip('should allow passengers to withdraw their funds after receiving credit', async () => {})
 })

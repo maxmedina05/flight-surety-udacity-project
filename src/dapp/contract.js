@@ -16,7 +16,20 @@ export default class Contract {
     this.passengers = []
   }
 
+  getMetaskAccountID() {
+    // Retrieving accounts
+    this.web3.eth.getAccounts(function (err, res) {
+      if (err) {
+        console.log('Error:', err)
+        return
+      }
+      this.metamaskAccountID = res[0]
+    })
+  }
+
   initialize(callback) {
+    this.getMetaskAccountID()
+
     this.web3.eth.getAccounts((error, accts) => {
       this.owner = accts[0]
 
@@ -118,15 +131,14 @@ export default class Contract {
     })
   }
 
-  getFlights() {
+  buyInsurance(airline, flight, timestamp, amount) {
     const self = this
 
     return new Promise((res, rej) => {
       self.flightSuretyApp.methods
-        .getFlights()
-        .call({ from: self.owner }, (error, result) => {
+        .buy(airline, flight, timestamp)
+        .send({ from: self.owner, value: amount }, (error, result) => {
           if (error) {
-            console.log(error)
             rej(error)
           } else {
             res(result)
@@ -135,12 +147,12 @@ export default class Contract {
     })
   }
 
-  registerFlight(flightNumber, timestamp, airline) {
+  withdraw() {
     const self = this
 
     return new Promise((res, rej) => {
       self.flightSuretyApp.methods
-        .registerFlight(flightNumber, timestamp, airline)
+        .withdraw()
         .send({ from: self.owner }, (error, result) => {
           if (error) {
             console.log(error)

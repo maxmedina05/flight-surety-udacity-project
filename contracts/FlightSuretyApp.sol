@@ -155,16 +155,31 @@ contract FlightSuretyApp {
         return flightSuretyData.getFunds(msg.sender);
     }
 
-    function buy(address airline) public payable requireIsOperational {
+    function buy(address airline, string flight, uint256 timestamp)
+        public
+        payable
+        requireIsOperational
+    {
         require(msg.value > 0, "Value must be greater than 0.");
         require(msg.value <= 1 ether, "Value must at least 1 ether.");
 
-        airline.transfer(msg.value);
-        flightSuretyData.buyInsurance(msg.sender, airline, msg.value);
+        // not working
+        // airline.transfer(msg.value);
+        flightSuretyData.buyInsurance(
+            msg.sender,
+            airline,
+            flight,
+            timestamp,
+            msg.value
+        );
     }
 
     function airlineCounter() public view returns (uint256) {
         return flightSuretyData.getAirlineCounter();
+    }
+
+    function withdraw() public returns (uint256) {
+        return flightSuretyData.withdraw(msg.sender);
     }
 
     /**
@@ -182,7 +197,10 @@ contract FlightSuretyApp {
         );
 
         flightSuretyData.registerFlight(key, airline, timestamp);
-        flights.push(key);
+    }
+
+    function getInsureeBalance() public view returns (uint256) {
+        return flightSuretyData.getBalance(msg.sender);
     }
 
     /**
@@ -195,7 +213,12 @@ contract FlightSuretyApp {
         string memory flight,
         uint256 timestamp,
         uint8 statusCode
-    ) internal pure {}
+    ) internal {
+        bytes32 flightKey = keccak256(
+            abi.encodePacked(airline, flight, timestamp)
+        );
+        flightSuretyData.creditInsurees(flightKey);
+    }
 
     // Generate a request for oracles to fetch flight information
     function fetchFlightStatus(
@@ -402,12 +425,17 @@ contract FlightSuretyData {
 
     function getFunds(address _address) external view returns (uint256);
 
-    function buyInsurance(address insuree, address airline, uint256 amount)
-        external;
+    function buyInsurance(
+        address insuree,
+        address airline,
+        string flight,
+        uint256 timestamp,
+        uint256 amount
+    ) external;
 
-    function creditInsuree(address insuree) external;
+    function creditInsurees(bytes32 key) external;
 
-    function getBalance(address insuree) external;
+    function getBalance(address insuree) external view returns (uint256);
 
     function withdraw(address insuree) external returns (uint256);
 

@@ -17,6 +17,7 @@ contract FlightSuretyData {
 
     struct Flight {
         bool isRegistered;
+        bool isDelay;
         uint8 statusCode;
         address airline;
         uint256 updatedTimestamp;
@@ -30,6 +31,7 @@ contract FlightSuretyData {
     struct Insurance {
         uint256 value;
         address airline;
+        bytes32 flight;
     }
 
     mapping(address => bool) private authorizedCallers;
@@ -153,6 +155,7 @@ contract FlightSuretyData {
     {
         flights[key] = Flight({
             isRegistered: true,
+            isDelay: true,
             statusCode: 10,
             airline: airline,
             updatedTimestamp: timestamp
@@ -194,20 +197,18 @@ contract FlightSuretyData {
         return funds[_address];
     }
 
-    function buyInsurance(address insuree, address airline, uint256 amount)
+    function buyInsurance(address insuree, address airline, string flight, uint256 timestamp, uint256 amount)
         external
         requireIsOperational
     {
-        insurances[insuree] = Insurance({value: amount, airline: airline});
 
+        bytes32 key = keccak256(abi.encodePacked(airline, flight, timestamp));
+        insurances[insuree] = Insurance({value: amount, airline: airline, flight: key});
         funds[airline] = funds[airline].add(amount);
     }
 
-    function creditInsuree(address insuree) external requireIsOperational {
-        address airline = insurances[insuree].airline;
-        uint256 expectedAmount = insurances[insuree].value.mul(3).div(2);
-        balances[insuree].add(expectedAmount);
-        funds[airline].sub(expectedAmount);
+    function creditInsurees(bytes32 key) external requireIsOperational {
+        flights[key].isDelay = true;
     }
 
     function getBalance(address insuree)
@@ -224,6 +225,14 @@ contract FlightSuretyData {
         requireIsOperational
         returns (uint256)
     {
+        bytes32 flightKey = insurances[insuree].flight;
+        require(flights[flightKey].isDelay, "Flight is not delay");
+
+        address airline = insurances[insuree].airline;
+        uint256 expectedAmount = insurances[insuree].value.mul(3).div(2);
+        balances[insuree].add(expectedAmount);
+        funds[airline].sub(expectedAmount);
+
         uint256 amount = balances[insuree];
 
         delete balances[insuree];

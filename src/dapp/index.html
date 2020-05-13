@@ -94,85 +94,61 @@
       </div>
 
       <div class="paper-form">
-        <h2>Registered Flight</h2>
-
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Flight Number</th>
-              <th scope="col">Status Code</th>
-              <th scope="col">Airline</th>
-              <th scope="col">Timestamp</th>
-            </tr>
-          </thead>
-
-          <tbody id="registeredFlightTableBody"></tbody>
-        </table>
-      </div>
-
-      <div class="paper-form">
-        <form>
-          <h2>Register Flight</h2>
-
-          <div class="form-group">
-            <label for="airline">Airline</label>
-            <select
-              id="regFlightAirlineSelect"
-              name="airline"
-              class="form-control"
-            >
-              <option selected disabled>Select one:</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="flight">Flight Number</label>
-            <input
-              id="regFlightAirlineFlightNumber"
-              name="flight"
-              class="form-control"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="date">Timestamp</label>
-            <input
-              id="regFlightAirlineTimestamp"
-              name="date"
-              type="date"
-              class="form-control"
-            />
-          </div>
-
-          <button type="button" class="btn btn-primary" id="registerFlightBtn">
-            Register
-          </button>
-        </form>
-      </div>
-
-      <div class="paper-form">
         <form>
           <h2>Buy Flight Insurance</h2>
 
           <div class="form-group">
-            <label for="airline">Insuree address</label>
+            <label for="airline">Airline</label>
             <select id="buyFlightInsuranceAirlineSelect" class="form-control">
               <option selected disabled>Select one:</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="flightNumber">Flight Number</label>
+            <label for="flight">Flight Number</label>
+            <select name="flight" id="flightSelect" class="form-control">
+              <option selected disabled>Select one:</option>
+              <option>FX1234</option>
+              <option>FX4567</option>
+              <option>FX2020</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Insurance Value</label>
             <input
-              id="flightNumberInput"
-              name="flightNumber"
+              id="amountInput"
+              name="amount"
               class="form-control"
+              placeholder="500"
+            />
+            <small id="emailHelp" class="form-text text-muted">Up to 1 ether (Please type value in wei)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="timestamp">Date</label>
+            <input
+              id="timestampInput"
+              name="timestamp"
+              class="form-control"
+              placeholder="2020-05-13"
+              type="date"
             />
           </div>
 
           <button type="button" class="btn btn-primary" id="BuyInsuranceBtn">
             Buy
+          </button>
+        </form>
+      </div>
+
+      
+      <div class="paper-form">
+        <form id="fundAirlineForm">
+          <h2>Withdraw Credit</h2>
+
+          <button type="button" class="btn btn-primary" id="withdrawBtn">
+            Fund
           </button>
         </form>
       </div>

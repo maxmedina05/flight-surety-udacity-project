@@ -21,14 +21,21 @@ import './flightsurety.css'
     DOM.elid('fundAirlineBtn').addEventListener('click', () =>
       handleFundAirline(contract),
     )
-    DOM.elid('registerFlightBtn').addEventListener('click', () =>
-      handleRegisterFlight(contract),
+
+    DOM.elid('BuyInsuranceBtn').addEventListener('click', () =>
+      handleBuyInsurance(contract),
     )
+
+    DOM.elid('withdrawBtn').addEventListener('click', () =>
+      handleWithdraw(contract),
+    )
+
     // User-submitted transaction
     DOM.elid('submit-oracle').addEventListener('click', () => {
       let flight = DOM.elid('flight-number').value
       // Write transaction
       contract.fetchFlightStatus(flight, (error, result) => {
+        console.log(result)
         display('Oracles', 'Trigger oracles', [
           {
             label: 'Fetch Flight Status',
@@ -79,6 +86,11 @@ async function populateAirlineForm(contract) {
   const select = DOM.elid('registerAirlineFormAirlineSelect')
   const airlines = contract.getAirlines()
 
+  while (select.childElementCount > 1) {
+    const lastChild = select.lastChild
+    select.removeChild(lastChild)
+  }
+
   const options = []
 
   for (const address of airlines) {
@@ -94,6 +106,12 @@ async function populateAirlineForm(contract) {
 
 async function populateFundAirlineForm(contract) {
   const select = DOM.elid('fundAirlineFormAirlineSelect')
+
+  while (select.childElementCount > 1) {
+    const lastChild = select.lastChild
+    select.removeChild(lastChild)
+  }
+
   const airlines = await getRegisteredAirlines(contract)
   const options = []
 
@@ -104,38 +122,13 @@ async function populateFundAirlineForm(contract) {
   DOM.appendArray(select, options)
 }
 
-async function populateFlightForm(contract) {
-  const selectFlight = DOM.elid('regFlightAirlineSelect')
-  selectFlight.innerHTML = ''
-  const airlines = await getRegisteredAirlines(contract)
-  const options = []
-
-  airlines.forEach((address) => {
-    options.push(DOM.option(address, { value: address }))
-  })
-
-  DOM.appendArray(selectFlight, options)
-}
-
-async function handleRegisterAirline(contract) {
-  const select = DOM.elid('registerAirlineFormAirlineSelect')
-  const address = select.value
-
-  await contract.registerAirline(address)
-  updateData(contract)
-}
-
-async function handleFundAirline(contract) {
-  const select = DOM.elid('fundAirlineFormAirlineSelect')
-  const address = select.value
-
-  await contract.fundAirline(address)
-  updateData(contract)
-}
-
 async function populateRegisteredArlines(contract) {
   const tableBody = DOM.elid('registeredAirlineTableBody')
   tableBody.innerHTML = ''
+  // while(select.childElementCount > 0) {
+  //   const lastChild = select.lastChild
+  //   select.removeChild(lastChild)
+  // }
 
   const addresses = contract.getAirlines()
   const registeredAirlines = []
@@ -164,52 +157,75 @@ async function populateRegisteredArlines(contract) {
   DOM.appendArray(tableBody, rows)
 }
 
-async function populateRegisteredFlight(contract) {
-  const tableBody = DOM.elid('registeredFlightTableBody')
-  tableBody.innerHTML = ''
+async function populateBuyInsuranceForm(contract) {
+  const select = DOM.elid('buyFlightInsuranceAirlineSelect')
+  const timestampInput = DOM.elid('timestampInput')
 
-  const addresses = await contract.getFlights()
+  timestampInput.value = new Date().toISOString().slice(0, 10)
 
-  console.log(addresses)
-  const registered = []
-
-  for (const address of addresses) {
-    const isRegistered = await contract.isFlightRegistered(address)
-
-    if (isRegistered) {
-    }
+  while (select.childElementCount > 1) {
+    const lastChild = select.lastChild
+    select.removeChild(lastChild)
   }
 
-  // const rows = []
+  const airlines = await getRegisteredAirlines(contract)
+  const options = []
 
-  // let idx = 1
-  // registered.forEach(({ address, fund }) => {
-  //   const row = DOM.makeElement('tr')
-  //   row.innerHTML = `<td>${idx++}</td><td>${address}</td><td>${fund} ether <td/>`
-  //   rows.push(row)
-  // })
+  airlines.forEach((address) => {
+    options.push(DOM.option(address, { value: address }))
+  })
 
-  // DOM.appendArray(tableBody, rows)
+  DOM.appendArray(select, options)
 }
 
-async function handleRegisterFlight(contract) {
-  const select = DOM.elid('regFlightAirlineSelect')
-  const flightNumberInput = DOM.elid('regFlightAirlineFlightNumber')
-  const dateInput = DOM.elid('regFlightAirlineTimestamp')
+async function handleRegisterAirline(contract) {
+  const select = DOM.elid('registerAirlineFormAirlineSelect')
+  const address = select.value
 
-  const timestamp = new Date(dateInput.value).getTime()
+  await contract.registerAirline(address)
+  updateData(contract)
+}
 
-  await contract.registerFlight(
-    flightNumberInput.value,
+async function handleFundAirline(contract) {
+  const select = DOM.elid('fundAirlineFormAirlineSelect')
+  const address = select.value
+
+  await contract.fundAirline(address)
+  updateData(contract)
+}
+
+async function handleBuyInsurance(contract) {
+  const amountInput = DOM.elid('amountInput').value
+  const amount = parseInt(amountInput)
+  const selectedAirline = DOM.elid('buyFlightInsuranceAirlineSelect').value
+  const selectedFlight = DOM.elid('flightSelect').value
+  const timestamp = new Date(DOM.elid('timestampInput').value).getTime()
+
+  console.log(amount)
+  await contract.buyInsurance(
+    selectedAirline,
+    selectedFlight,
     timestamp,
-    select.value,
+    amount,
   )
+}
+
+async function handleWithdraw(contract) {
+  try {
+    const amount = await contract.withdraw()
+
+    console.log(amount)
+
+    alert(`You have been credited with ${amount} `)
+  } catch (e) {
+    console.log(e)
+    alert(e)
+  }
 }
 
 function updateData(contract) {
   populateRegisteredArlines(contract)
   populateAirlineForm(contract)
   populateFundAirlineForm(contract)
-  populateFlightForm(contract)
-  populateRegisteredFlight(contract)
+  populateBuyInsuranceForm(contract)
 }
